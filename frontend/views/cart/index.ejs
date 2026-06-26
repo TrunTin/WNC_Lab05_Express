@@ -1,0 +1,162 @@
+<%- include('../partials/header', { page: 'cart' }) %>
+
+<div class="container" id="cart-main">
+
+  <nav class="breadcrumb" style="padding-top:var(--sp-5)">
+    <a href="/">Trang chủ</a>
+    <span class="breadcrumb__sep">›</span>
+    <span class="breadcrumb__current">Giỏ hàng</span>
+  </nav>
+
+  <% if (cart.length === 0) { %>
+
+    <div class="empty-state">
+      <div class="empty-state__icon"></div>
+      <p class="empty-state__title">Giỏ hàng trống</p>
+      <p class="empty-state__desc">Bạn chưa có sản phẩm nào trong giỏ hàng</p>
+      <a href="/" class="btn btn--primary">Tiếp tục mua sắm</a>
+    </div>
+
+  <% } else { %>
+
+    <div class="cart-layout">
+
+      <!-- Items -->
+      <div>
+        <h1 class="cart-items-title">
+          Giỏ hàng
+          <span id="cart-items-count" style="font-size:16px;font-weight:400;color:var(--color-muted);">
+            (<%= cart.reduce((s,i) => s+i.quantity, 0) %> sản phẩm)
+          </span>
+        </h1>
+
+        <div class="cart-items-list">
+          <% cart.forEach(item => { %>
+            <div class="cart-item" data-cart-item="<%= item._id %>">
+
+              <!-- Image -->
+              <div class="cart-item__image">
+                <% if (item.image) { %>
+                  <img src="<%= item.image %>" alt="<%= item.name %>" />
+                <% } else { %>
+                  <div class="cart-item__image-placeholder">📦</div>
+                <% } %>
+              </div>
+
+              <!-- Info -->
+              <div>
+                <p class="cart-item__name"><%= item.name %></p>
+                <p class="cart-item__price-unit">
+                  <%= new Intl.NumberFormat('vi-VN').format(item.price) %>₫ / cái
+                </p>
+                <div class="qty-stepper" style="margin-top:8px;width:fit-content">
+                  <button type="button"
+                    onclick="changeQty(this, '<%= item._id %>', -1)"
+                    aria-label="Giảm">−</button>
+                  <input
+                    type="number"
+                    value="<%= item.quantity %>"
+                    min="1"
+                    max="99"
+                    data-cart-qty="<%= item._id %>"
+                    onchange="updateQty('<%= item._id %>', this.value)"
+                  />
+                  <button type="button"
+                    onclick="changeQty(this, '<%= item._id %>', 1)"
+                    aria-label="Tăng">+</button>
+                </div>
+              </div>
+
+              <!-- Subtotal -->
+              <div class="cart-item__subtotal">
+                <%= new Intl.NumberFormat('vi-VN').format(item.price * item.quantity) %>₫
+              </div>
+
+              <!-- Remove -->
+              <button class="btn btn--icon btn--danger"
+                data-cart-remove="<%= item._id %>"
+                title="Xóa sản phẩm">
+                ✕
+              </button>
+
+            </div>
+          <% }) %>
+        </div>
+
+        <div style="margin-top:var(--sp-4);display:flex;gap:var(--sp-3);">
+          <a href="/" class="btn btn--ghost btn--sm">← Tiếp tục mua sắm</a>
+          <form action="/cart/clear" method="POST">
+            <button type="submit" class="btn btn--danger btn--sm">Xóa tất cả</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="cart-summary">
+        <h2 class="cart-summary__title">Tóm tắt đơn hàng</h2>
+
+        <div class="cart-summary__row">
+          <span>Tạm tính</span>
+          <span id="cart-total-amount">
+            <%= new Intl.NumberFormat('vi-VN').format(total) %>₫
+          </span>
+        </div>
+        <div class="cart-summary__row">
+          <span>Phí vận chuyển</span>
+          <span style="color:var(--color-success);font-weight:600;">Miễn phí</span>
+        </div>
+
+        <div class="cart-summary__total">
+          <span>Tổng cộng</span>
+          <span class="cart-summary__total-amount" id="cart-total-amount">
+            <%= new Intl.NumberFormat('vi-VN').format(total) %>₫
+          </span>
+        </div>
+
+        <button class="btn btn--primary btn--lg btn--block"
+          onclick="Toast.success('Chức năng thanh toán sẽ được phát triển sau')">
+          Thanh toán ngay
+        </button>
+      </div>
+
+    </div>
+
+  <% } %>
+
+</div>
+
+<script src="/js/cart.js"></script>
+<script>
+  function changeQty(btn, productId, delta) {
+    const input = btn.parentElement.querySelector('input[type=number]');
+    const newVal = Math.max(1, Math.min(99, parseInt(input.value) + delta));
+    input.value = newVal;
+    updateQty(productId, newVal);
+  }
+
+  async function updateQty(productId, quantity) {
+    try {
+      const res = await fetch('/cart/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: parseInt(quantity) }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const sub = document.querySelector(`[data-cart-item="${productId}"] .cart-item__subtotal`);
+        const item = data.cart.find(i => i._id === productId);
+        if (sub && item) sub.textContent = new Intl.NumberFormat('vi-VN').format(item.price * item.quantity) + '₫';
+        const totals = document.querySelectorAll('#cart-total-amount');
+        totals.forEach(el => el.textContent = new Intl.NumberFormat('vi-VN').format(data.total) + '₫');
+        const countEl = document.getElementById('cart-items-count');
+        const count = data.cart.reduce((s,i) => s+i.quantity, 0);
+        if (countEl) countEl.textContent = `(${count} sản phẩm)`;
+        updateCartBadge(count);
+      }
+    } catch {
+      Toast.error('Không thể cập nhật');
+    }
+  }
+</script>
+
+<%- include('../partials/footer') %>

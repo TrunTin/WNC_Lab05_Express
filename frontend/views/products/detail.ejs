@@ -1,0 +1,115 @@
+<%- include('../partials/header', { page: 'detail' }) %>
+
+<div class="container">
+
+  <nav class="breadcrumb">
+    <a href="/">Trang chủ</a>
+    <span class="breadcrumb__sep">›</span>
+    <span class="breadcrumb__current"><%= product.name %></span>
+  </nav>
+
+  <div class="detail-layout">
+
+    <div class="detail-image-wrap">
+      <% if (product.image) { %>
+        <img src="<%= product.image %>" alt="<%= product.name %>" />
+      <% } else { %>
+        <div class="detail-image-wrap__placeholder">📦</div>
+      <% } %>
+    </div>
+
+    <!-- Info -->
+    <div class="detail-info">
+
+      <div>
+        <span class="detail-info__category">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="2" y="2" width="9" height="9" rx="1"/><rect x="13" y="2" width="9" height="9" rx="1"/>
+            <rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/>
+          </svg>
+          <%= product.category %>
+        </span>
+      </div>
+
+      <h1 class="detail-info__name"><%= product.name %></h1>
+
+      <div class="detail-info__price">
+        <%= new Intl.NumberFormat('vi-VN').format(product.price) %>₫
+      </div>
+
+      <div class="detail-divider"></div>
+
+      <% if (product.description) { %>
+        <div class="detail-info__desc"><%= product.description %></div>
+      <% } %>
+
+      <div class="detail-info__stock">
+        <% if (product.stock > 0) { %>
+          <span class="badge badge--green">✓ Còn hàng (<%= product.stock %>)</span>
+        <% } else { %>
+          <span class="badge badge--red">✕ Hết hàng</span>
+        <% } %>
+      </div>
+
+      <div class="detail-divider"></div>
+
+      <!-- Add to cart -->
+      <% if (product.stock > 0) { %>
+        <div class="detail-info__add">
+          <div class="qty-stepper">
+            <button type="button" data-qty-change="-1" data-qty-target="#qty-input" aria-label="Giảm">−</button>
+            <input type="number" id="qty-input" value="1" min="1" max="<%= product.stock %>" readonly />
+            <button type="button" data-qty-change="1" data-qty-target="#qty-input" aria-label="Tăng">+</button>
+          </div>
+          <button class="btn btn--primary btn--lg"
+            id="add-to-cart-btn"
+            data-add-to-cart="<%= product._id %>">
+            🛒 Thêm vào giỏ hàng
+          </button>
+        </div>
+      <% } else { %>
+        <button class="btn btn--ghost btn--lg" disabled>Hết hàng</button>
+      <% } %>
+
+      <a href="/" class="btn btn--ghost btn--sm" style="align-self:flex-start;">
+        ← Quay lại danh sách
+      </a>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('add-to-cart-btn')?.addEventListener('click', async (e) => {
+    e.stopImmediatePropagation();
+    const btn = e.currentTarget;
+    const productId = btn.dataset.addToCart;
+    const qty = parseInt(document.getElementById('qty-input')?.value || 1);
+
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span style="opacity:.6">Đang thêm…</span>';
+
+    try {
+      const res = await fetch('/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: qty }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        updateCartBadge(data.cartCount);
+        Toast.success('Đã thêm vào giỏ hàng');
+      } else {
+        Toast.error(data.message || 'Không thể thêm');
+      }
+    } catch {
+      Toast.error('Lỗi kết nối');
+    } finally {
+      btn.innerHTML = original;
+      btn.disabled = false;
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

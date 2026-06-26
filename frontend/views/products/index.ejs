@@ -1,0 +1,112 @@
+<%- include('../partials/header', { page: 'home' }) %>
+
+<div class="container">
+
+  <div class="page-hero">
+    <h1 class="page-hero__title">Khám phá sản phẩm</h1>
+    <p class="page-hero__sub">Tìm kiếm và mua sắm hàng nghìn sản phẩm chất lượng</p>
+  </div>
+
+  <div class="filters-bar">
+    <input
+      type="search"
+      class="input"
+      placeholder="Tìm kiếm sản phẩm…"
+      value="<%= search %>"
+      data-search-input
+      style="max-width:300px"
+    />
+    <select class="input" style="max-width:180px" onchange="filterCategory(this.value)">
+      <option value="">Tất cả danh mục</option>
+      <% const cats = ['Điện thoại','Laptop','Máy tính bảng','Phụ kiện','Âm thanh','Đồng hồ','Khác']; %>
+      <% cats.forEach(c => { %>
+        <option value="<%= c %>" <%= category === c ? 'selected' : '' %>><%= c %></option>
+      <% }) %>
+    </select>
+    <% if (search || category) { %>
+      <a href="/" class="btn btn--ghost btn--sm">✕ Xóa bộ lọc</a>
+    <% } %>
+    <span class="filters-bar__total"><%= total %> sản phẩm</span>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="empty-state">
+      <div class="empty-state__icon"></div>
+      <p class="empty-state__title">Không thể tải dữ liệu</p>
+      <p class="empty-state__desc"><%= error %></p>
+      <a href="/" class="btn btn--primary">Thử lại</a>
+    </div>
+  <% } else if (products.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-state__icon"></div>
+      <p class="empty-state__title">Không tìm thấy sản phẩm</p>
+      <p class="empty-state__desc">Thử thay đổi từ khóa hoặc danh mục tìm kiếm</p>
+      <a href="/" class="btn btn--primary">Xem tất cả</a>
+    </div>
+  <% } else { %>
+
+    <div class="product-grid">
+      <% products.forEach(product => { %>
+        <div class="product-card">
+          <a href="/products/<%= product._id %>" class="product-card__image-wrap">
+            <% if (product.image) { %>
+              <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy" />
+            <% } else { %>
+              <div class="product-card__placeholder"></div>
+            <% } %>
+          </a>
+          <div class="product-card__body">
+            <span class="product-card__category"><%= product.category %></span>
+            <a href="/products/<%= product._id %>">
+              <h3 class="product-card__name"><%= product.name %></h3>
+            </a>
+            <p class="product-card__price">
+              <%= new Intl.NumberFormat('vi-VN').format(product.price) %>₫
+            </p>
+          </div>
+          <div class="product-card__actions">
+            <a href="/products/<%= product._id %>" class="btn btn--outline btn--sm" style="flex:1">
+              Chi tiết
+            </a>
+            <button class="btn btn--primary btn--sm" style="flex:1"
+              data-add-to-cart="<%= product._id %>">
+              + Giỏ hàng
+            </button>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+      <div style="display:flex;justify-content:center;gap:var(--sp-2);margin:var(--sp-7) 0;flex-wrap:wrap;">
+        <% for (let p = 1; p <= totalPages; p++) { %>
+          <%
+            const pUrl = new URL('http://x');
+            if (search) pUrl.searchParams.set('search', search);
+            if (category) pUrl.searchParams.set('category', category);
+            pUrl.searchParams.set('page', p);
+          %>
+          <a href="/?<%= pUrl.searchParams.toString() %>"
+            class="btn btn--sm <%= p === currentPage ? 'btn--primary' : 'btn--ghost' %>">
+            <%= p %>
+          </a>
+        <% } %>
+      </div>
+    <% } %>
+
+  <% } %>
+
+</div>
+
+<script>
+  function filterCategory(val) {
+    const url = new URL(window.location);
+    if (val) url.searchParams.set('category', val);
+    else url.searchParams.delete('category');
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+  }
+</script>
+
+<%- include('../partials/footer') %>

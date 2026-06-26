@@ -1,0 +1,269 @@
+{
+  "info": {
+    "name": "backend-api thuc hành lab 5",
+    "description": "full CRUD API cho sản phẩm",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "productId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/../api/health", "host": ["{{baseUrl}}"], "path": ["..","api","health"] }
+      }
+    },
+    {
+      "name": "1. Tạo sản phẩm mới",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.success && res.data) pm.collectionVariables.set('productId', res.data._id);",
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('success true', () => pm.expect(res.success).to.be.true);",
+              "pm.test('has _id', () => pm.expect(res.data._id).to.exist);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"iPhone 15 Pro Max 256GB\",\n  \"description\": \"Điện thoại flagship Apple 2024 với chip A17 Pro, camera 48MP, màn hình Super Retina XDR 6.7 inch.\",\n  \"price\": 32990000,\n  \"category\": \"Điện thoại\",\n  \"image\": \"https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&q=80\",\n  \"stock\": 25\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+      }
+    },
+    {
+      "name": "2. Lấy danh sách sản phẩm (tất cả)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('success true', () => pm.expect(res.success).to.be.true);",
+              "pm.test('data is array', () => pm.expect(res.data).to.be.an('array'));",
+              "pm.test('has total', () => pm.expect(res.total).to.be.a('number'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+      }
+    },
+    {
+      "name": "3. Lấy danh sách — tìm kiếm theo tên",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('data is array', () => pm.expect(res.data).to.be.an('array'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/products?search=iPhone",
+          "host": ["{{baseUrl}}"],
+          "path": ["products"],
+          "query": [{ "key": "search", "value": "iPhone" }]
+        }
+      }
+    },
+    {
+      "name": "4. Lấy danh sách — lọc theo danh mục",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('all same category', () => {",
+              "  res.data.forEach(p => pm.expect(p.category).to.equal('Laptop'));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/products?category=Laptop",
+          "host": ["{{baseUrl}}"],
+          "path": ["products"],
+          "query": [{ "key": "category", "value": "Laptop" }]
+        }
+      }
+    },
+    {
+      "name": "5. Lấy danh sách — phân trang (page 1, limit 5)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/products?page=1&limit=5",
+          "host": ["{{baseUrl}}"],
+          "path": ["products"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "5" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. Lấy chi tiết 1 sản phẩm theo ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('success true', () => pm.expect(res.success).to.be.true);",
+              "pm.test('has product data', () => pm.expect(res.data._id).to.exist);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] }
+      }
+    },
+    {
+      "name": "7. Cập nhật sản phẩm theo ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('success true', () => pm.expect(res.success).to.be.true);",
+              "pm.test('price updated', () => pm.expect(res.data.price).to.equal(34990000));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"iPhone 15 Pro Max 512GB\",\n  \"price\": 34990000,\n  \"stock\": 20,\n  \"description\": \"Phiên bản 512GB — chip A17 Pro, camera 48MP, cổng USB-C 3.0, khung titan.\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] }
+      }
+    },
+    {
+      "name": "8. Xóa sản phẩm theo ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('success true', () => pm.expect(res.success).to.be.true);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] }
+      }
+    },
+    {
+      "name": "[EDGE] Tạo sản phẩm thiếu name → 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', () => pm.response.to.have.status(400));",
+              "pm.test('success false', () => pm.expect(pm.response.json().success).to.be.false);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Sản phẩm không có tên\",\n  \"price\": 100000,\n  \"category\": \"Khác\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+      }
+    },
+    {
+      "name": "[EDGE] Tạo sản phẩm giá âm → 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', () => pm.response.to.have.status(400));",
+              "pm.test('success false', () => pm.expect(pm.response.json().success).to.be.false);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sản phẩm lỗi\",\n  \"price\": -500,\n  \"category\": \"Khác\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+      }
+    },
+    {
+      "name": "[EDGE] Lấy sản phẩm ID không tồn tại → 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 404 or 400', () => pm.expect([400,404]).to.include(pm.response.code));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/products/000000000000000000000000", "host": ["{{baseUrl}}"], "path": ["products", "000000000000000000000000"] }
+      }
+    }
+  ]
+}

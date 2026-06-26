@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> — VLU</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="container">
+        <div class="navbar__inner">
+          <a href="/" class="navbar__brand">VLU<span>.</span></a>
+          <div class="navbar__nav">
+            <a
+              href="/"
+              class="navbar__link <%= typeof page !== 'undefined' && page === 'home' ? 'active' : '' %>"
+              >Sản phẩm</a
+            >
+            <a href="/cart" class="cart-btn">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 01-8 0" />
+              </svg>
+              Giỏ hàng
+              <span class="cart-badge"><%= cartCount %></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main></main>
+  </body>
+</html>
